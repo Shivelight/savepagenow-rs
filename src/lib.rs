@@ -10,8 +10,12 @@
 //! API reference:
 //! <https://docs.google.com/document/d/1Nsv52MvSjbLb2PCpHlat0gkzw0EvtSgpKHu4mk0MnrA>
 
-use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use std::{
+    num::NonZeroU32,
+    time::{Duration, SystemTime, UNIX_EPOCH},
+};
 
+use governor::{DefaultDirectRateLimiter, Quota, RateLimiter};
 use reqwest::{
     header::{HeaderMap, HeaderValue},
     Client, ClientBuilder, StatusCode,
@@ -85,6 +89,7 @@ pub struct SPN2CaptureRequestOptParams {
 pub struct SPN2Client {
     http_client: Client,
     timeout: Duration,
+    limiter: DefaultDirectRateLimiter,
 }
 
 impl SPN2Client {
@@ -100,9 +105,11 @@ impl SPN2Client {
         headers.insert("Authorization", auth_value);
         headers.insert("Accept", HeaderValue::from_static("application/json"));
         let http_client = ClientBuilder::new().default_headers(headers).build()?;
+        let limiter = RateLimiter::direct(Quota::per_minute(NonZeroU32::new(12u32).unwrap()));
         Ok(Self {
             http_client,
             timeout,
+            limiter,
         })
     }
 
@@ -196,6 +203,7 @@ impl SPN2Client {
         url: &str,
         opt_params: &SPN2CaptureRequestOptParams,
     ) -> Result<SPN2CaptureResponse, Error> {
+        self.limiter.until_ready().await;
         let params = SPN2CaptureRequestParams { url, opt_params };
         let req = self
             .http_client
