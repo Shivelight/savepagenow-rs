@@ -117,7 +117,7 @@ impl SPN2Client {
 pub struct SPN2CaptureResponse {
     /// The requested URL to capture
     pub url: String,
-    /// The ID of the capture request  
+    /// The ID of the capture request
     /// Use this to issue status requests
     pub job_id: String,
 }
@@ -126,14 +126,14 @@ pub struct SPN2CaptureResponse {
 #[derive(Deserialize, Debug)]
 #[serde(tag = "status")]
 pub enum SPN2CaptureStatus {
-    /// Status: Pending  
+    /// Status: Pending
     /// Capture request has not been fully processed.
     #[serde(rename = "pending")]
     Pending {
         /// List of captured resources
         resources: Vec<String>,
     },
-    /// Status: Error  
+    /// Status: Error
     /// Capture request was not successful, some error occured.
     #[serde(rename = "error")]
     Error {
@@ -146,7 +146,7 @@ pub enum SPN2CaptureStatus {
         /// List of captured resources
         resources: Vec<String>,
     },
-    /// Status: Success  
+    /// Status: Success
     /// Capture request was successfully processed.
     #[serde(rename = "success")]
     Success {
@@ -179,7 +179,7 @@ pub struct SPN2UserStatus {
 pub enum SPN2SystemStatus {
     /// Everything is fine
     Ok,
-    /// System is having issues, e.g being overloaded  
+    /// System is having issues, e.g being overloaded
     /// The system is still working, but delays are expected
     Issues {
         /// A description of the issues the system is having
@@ -202,7 +202,6 @@ impl SPN2Client {
             .post(API_CAPTURE_URL)
             .timeout(self.timeout)
             .form(&params);
-        eprintln!("{req:?}");
         let resp = req.send().await?;
         match resp.status() {
             StatusCode::OK => Ok(resp.json::<SPN2CaptureResponse>().await?),
