@@ -7,7 +7,7 @@ use tokio::time;
 async fn main() {
     let args: Vec<String> = env::args().skip(1).collect();
     let api_access_key = args
-        .get(0)
+        .first()
         .expect("first arg: <api_access_key>")
         .to_string();
     let api_secret_file = args
